@@ -51,6 +51,7 @@ input{user-select:text;-webkit-user-select:text;font:inherit;font-size:18px;padd
 .pr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:7px 9px;background:#15151a;border:1px solid #2c2c33;border-radius:8px;margin-bottom:6px;font-size:14px}
 .pr .rk{order:0;color:#8d8678;min-width:1.6em}.pr .pn{order:1;flex:1;min-width:80px;color:#fff;overflow-wrap:anywhere}.pr .sb{order:2}.pr .kk{order:3;padding:3px 10px;font-size:13px;background:#3a1010}.pr .pi{order:4;flex-basis:100%;color:#bdb5a5;font-size:13px}
 .sb{padding:2px 9px;border-radius:10px;font-size:12px;background:#333;color:#fff}.s-play{background:#1d6b34}.s-dead{background:#7a1010}.s-clear{background:#8a6d12}.s-off{background:#222;color:#888}
+#spec{position:fixed;left:0;right:0;top:0;z-index:35;display:none;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px;background:rgba(0,0,0,.72)}#spec button{padding:8px 12px;font-size:15px;flex:none}#spec>div{flex:1;min-width:0;text-align:center;font-size:12px;color:#bdb5a5}#spec b{display:block;color:#fff;font-size:15px}
 .maps{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .maps canvas{position:static;inset:auto;width:156px;height:156px;background:#000;border:1px solid #444}
 </style></head><body>
@@ -62,6 +63,7 @@ input{user-select:text;-webkit-user-select:text;font:inherit;font-size:18px;padd
 <canvas id="mini" width="130" height="130" style="inset:auto;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);width:130px;height:130px;display:none;opacity:.85;border:1px solid #555;pointer-events:none"></canvas>
 <div id="note" style="position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);max-width:min(58vw,260px);padding:10px 12px;background:#d9c9a0;color:#3a2c18;border-radius:4px;font-size:14px;line-height:1.35;display:none;pointer-events:none;transform:rotate(-1deg)"></div>
 <button id="run">LARI</button>
+<button id="pzr" style="position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 238px);display:none;z-index:5;padding:8px 10px;font-size:13px;opacity:.9">↺ Reset balok</button>
 <div id="quiz" style="position:fixed;inset:0;background:rgba(5,5,7,.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;box-sizing:border-box;text-align:center;z-index:20;overflow-y:auto"><h2 style="margin:0;color:#e9c46a;font-size:20px" id="qt"></h2><p id="qd" style="margin:0;max-width:320px;color:#bdb5a5;font-size:14px"></p><img id="qimg" alt="" style="display:none;max-width:min(320px,100%);max-height:32vh;border-radius:8px;background:#fff"><p id="qq" style="margin:0;font-size:20px;max-width:340px;color:#fff"></p><div id="qo" style="display:flex;flex-direction:column;gap:10px;width:min(300px,100%)"></div></div>
 <div id="intro" style="position:fixed;inset:0;background:#000;display:none;z-index:50;align-items:center;justify-content:center"><video id="introv" playsinline preload="auto" style="width:100%;height:100%;object-fit:contain;background:#000"></video><button id="introskip" style="position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);padding:8px 16px;font-size:14px;background:rgba(0,0,0,.55);border:1px solid #888">Lewati ▶▶</button></div>
 <div id="ov"><h1>RUMAH HANTU</h1>
@@ -86,11 +88,13 @@ input{user-select:text;-webkit-user-select:text;font:inherit;font-size:18px;padd
 <div class="hb"><button id="hStart">▶ Mulai</button><button id="hEnd" class="sec" style="display:none">■ Akhiri</button><button id="hClose" class="sec">Tutup room</button></div>
 <div id="hList"></div>
 <div class="maps"><div><div class="mut">Lantai 1</div><canvas id="hm0" width="156" height="156"></canvas></div><div><div class="mut">Lantai 2</div><canvas id="hm1" width="156" height="156"></canvas></div></div></div>
+<div id="spec"><button id="spPrev">◀</button><div><b id="spN"></b><span id="spInfo"></span></div><button id="spNext">▶</button><button id="spBack" class="sec">☰ Daftar</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const F=[["#############","#S..#......K#","#.#.#.####.##","#.#...#..T..#","#.#####.#####","#...K...#...#","#.#####.#.#.#","#.#...#...#.#","#.#.#.#####.#","#...#...K...#","#.#####.###.#","#..........E#","#############"],
 ["#############","#T.....#...K#","#.#####.#.#.#","#.#...#...#.#","#.#.#.#.###.#","#...#...#...#","#.#####.#.#.#","#.#K...P#.#.#","#.#.#####.#.#","#...#K....#.#","#.###.###.#.#","#...........#","#############"]];
 const S=4,H=3.2,W=13,R=13,NKT=6;
+const F1O=F[1],F2P=F[1].map((r,i)=>{r=r.split('');if(i>=1&&i<=5)for(let c=3;c<=7;c++)r[c]='.';if(i===1)r[11]='.';return r.join('')});
 const $=id=>document.getElementById(id);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x030305);scene.fog=new THREE.FogExp2(0x030305,.13);
 const cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,60);cam.rotation.order='YXZ';scene.add(cam);
@@ -123,7 +127,7 @@ const DIRS=[[0,-1],[0,1],[1,0],[-1,0]];
 const NT=[[[3,1,0,"Hantu tidur di rumah ini. Temukan peta di lantai atas, lewat tangga biru di timur."],[10,2,2,"Tangga naik sudah dekat: turun, lalu ke kiri."]],[[2,1,0,"Peta ada di sisi tenggara. Ikuti lorong ke bawah."],[3,5,1,"Ke kanan lewat lorong atas, lalu turun lagi."],[6,5,0,"Hampir sampai. Turun ke kanan, ujung lorong."],[7,6,2,"Peta ada tepat di selatanmu. Cepat ambil."]]];
 const pcv=document.createElement('canvas');pcv.width=64;pcv.height=80;{const x=pcv.getContext('2d');x.fillStyle='#d9c9a0';x.fillRect(0,0,64,80);x.fillStyle='#5a4a30';for(let i=0;i<7;i++)x.fillRect(8,12+i*9,20+Math.random()*30,2);x.fillStyle='#8a1a1a';x.fillRect(46,60,8,8)}
 const pm=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(pcv)}),pg=new THREE.PlaneGeometry(.7,.9);
-let rnd=Math.random,RM=null,rst='wait',goAct=null;
+let specTick=null,rnd=Math.random,RM=null,rst='wait',goAct=null;
 function mulb(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function genTraps(i,n){const M=F[i],sp=[],cells=[];M.forEach((row,r)=>[...row].forEach((ch,c)=>{if('SETP'.includes(ch))sp.push([c,r])}));
@@ -139,9 +143,9 @@ else if(ch==='E'){exitP=[x,z];const d=new THREE.Mesh(new THREE.BoxGeometry(1.6,2
 else if(ch==='T'){stairP=[x,z];for(let k=0;k<4;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.8,.25,.5),stm);b.position.set(x,.12+k*.25,z-.9+k*.5);world.add(b)}}}}
 items.forEach(it=>{if(it.state==='avail'&&it.fl===i){it.m=it.type==='life'?mkHeart():mkFlash();it.m.position.set(it.x,1.2,it.z);world.add(it.m)}else it.m=null});
 TD[i].forEach(t=>{t.m=null;if(t.type===1&&t.used)return;t.m=new THREE.Mesh(trg,trm[t.type]);t.m.rotation.x=-Math.PI/2;t.m.position.set(t.x,.03,t.z);world.add(t.m)});
-NT[i].forEach(([c,r,d,t])=>{const m=new THREE.Mesh(pg,pm),v=DIRS[d];m.position.set(c*S+S/2+v[0]*(S/2-.03),1.5,r*S+S/2+v[1]*(S/2-.03));m.rotation.y=Math.atan2(-v[0],-v[1]);m.rotation.z=(Math.random()-.5)*.2;world.add(m)});
-LP[i].forEach(([c,r,d],k)=>{const v=DIRS[d],x=c*S+S/2+v[0]*(S/2-.12),z=r*S+S/2+v[1]*(S/2-.12);const bk=new THREE.Mesh(bkg,bkm);bk.position.set(x,2.0,z);const b=new THREE.Mesh(bg,bOn);b.position.set(x-v[0]*.18,2.2,z-v[1]*.18);let l=null;if(Q.pool===0){l=new THREE.PointLight(0xffb060,1.2,10,2);l.position.set(x-v[0]*.45,2.2,z-v[1]*.45);world.add(l)}world.add(bk,b);const lp={b,l,x,z,k,v,lx:x-v[0]*.45,lz:z-v[1]*.45,on:true};lamps.push(lp);setLamp(lp,!(lampsOut&&k%2===1))});
-CL[i].forEach(([c,r],k)=>{const x=c*S+S/2,z=r*S+S/2,cd=new THREE.Mesh(ccg,bkm),sh=new THREE.Mesh(csg,csm),b=new THREE.Mesh(bg,bOn),gl=new THREE.Mesh(cgS,cgl);cd.position.set(x,H-.35,z);sh.position.set(x,H-.82,z);b.position.set(x,H-.88,z);gl.position.set(x,H-.88,z);world.add(cd,sh,b,gl);const cl={b,gl,k};clamps.push(cl);setCl(cl,!(lampsOut&&k%2===1))})}
+NT[i].forEach(([c,r,d,t])=>{if(M[r+DIRS[d][1]][c+DIRS[d][0]]!=='#')return;const m=new THREE.Mesh(pg,pm),v=DIRS[d];m.position.set(c*S+S/2+v[0]*(S/2-.03),1.5,r*S+S/2+v[1]*(S/2-.03));m.rotation.y=Math.atan2(-v[0],-v[1]);m.rotation.z=(Math.random()-.5)*.2;world.add(m)});
+LP[i].forEach(([c,r,d],k)=>{if(M[r+DIRS[d][1]][c+DIRS[d][0]]!=='#')return;const v=DIRS[d],x=c*S+S/2+v[0]*(S/2-.12),z=r*S+S/2+v[1]*(S/2-.12);const bk=new THREE.Mesh(bkg,bkm);bk.position.set(x,2.0,z);const b=new THREE.Mesh(bg,bOn);b.position.set(x-v[0]*.18,2.2,z-v[1]*.18);let l=null;if(Q.pool===0){l=new THREE.PointLight(0xffb060,1.2,10,2);l.position.set(x-v[0]*.45,2.2,z-v[1]*.45);world.add(l)}world.add(bk,b);const lp={b,l,x,z,k,v,lx:x-v[0]*.45,lz:z-v[1]*.45,on:true};lamps.push(lp);setLamp(lp,!(lampsOut&&k%2===1))});
+CL[i].forEach(([c,r],k)=>{const x=c*S+S/2,z=r*S+S/2,cd=new THREE.Mesh(ccg,bkm),sh=new THREE.Mesh(csg,csm),b=new THREE.Mesh(bg,bOn),gl=new THREE.Mesh(cgS,cgl);cd.position.set(x,H-.35,z);sh.position.set(x,H-.82,z);b.position.set(x,H-.88,z);gl.position.set(x,H-.88,z);world.add(cd,sh,b,gl);const cl={b,gl,k};clamps.push(cl);setCl(cl,!(lampsOut&&k%2===1))});if(PZ&&i===1)pzBuild()}
 const gh=new THREE.Group(),ghm=new THREE.Group();
 (function(){
 const cloth=new THREE.MeshLambertMaterial({color:0xd8d2bc,emissive:0x23232a,side:THREE.DoubleSide});
@@ -165,11 +169,11 @@ let px,pz,yaw,pitch,gx,gz,got,playing=false,sx=0,sy=0,tt=0,hb=0,gdist=[],gsrc=0,
 function hud(){$('kc').textContent='🗝 '+got+'/'+NKT+'  '+'❤️'.repeat(Math.max(lives,0))+'🖤'.repeat(Math.max(0,3-lives))+'\nLevel '+level+' · Lantai '+(fi+1)+'\n'+(mapGot?'🗺 Peta ✓':'🗺 Cari peta')+(bigLight?'\n🔦 Senter besar ✓':'')+(RM?'\n🏠 Room '+RM.code:'');goalTxt()}
 function goalTxt(){const g=$('goal');let a,b,c=false;const here=keys.filter(k=>k.m).length;
 if(got>=NKT){c=true;a='🚪 LARI KE PINTU HIJAU!';b=fi===1?'Labirin kini terang & hantu menghilang. Turun lewat TANGGA BIRU ke lantai 1, lalu cari pintu hijau':'Pintu hijau ada di lantai 1. Labirin kini terang, hantu sudah menghilang!'}
-else{a='🗝 Kumpulkan kunci emas ('+got+'/'+NKT+')';b=here>0?'Masih ada '+here+' kunci di lantai ini (titik kuning di peta)':'Lantai ini sudah habis. Pindah lantai lewat TANGGA BIRU';if(!mapGot)b+='\n🗺 Cari peta: ikuti kertas petunjuk di dinding'}
+else{a='🗝 Kumpulkan kunci emas ('+got+'/'+NKT+')';b=here>0?'Masih ada '+here+' kunci di lantai ini (titik kuning di peta)':'Lantai ini sudah habis. Pindah lantai lewat TANGGA BIRU';if(!mapGot)b+='\n🗺 Cari peta: ikuti kertas petunjuk di dinding';if(PZ&&!PZ.solved)b+='\n🧩 Lantai 2: dorong balok jawaban ke lingkaran hijau'}
 g.className=c?'go':'';g.innerHTML='<b>'+a+'</b>'+b.split('\n').map(t=>'<span>'+t+'</span>').join('')}
 function say(s,t){$('msg').textContent=s;msgT=t||3}
 function applyLit(v){ambL.color.setRGB(.165+.685*v,.125+.695*v,.188+.712*v);ambL.intensity=Q.amb+1.4*v;scene.fog.density=(bigLight?.075:.13)*(1-.75*v);scene.background.setRGB(.012+.15*v,.012+.16*v,.02+.2*v);scene.fog.color.copy(scene.background)}
-function newLevel(lv){level=lv;rnd=RM?mulb(RM.seed*131+lv):Math.random;wake=Math.max(3,8-(lv-1));const n=Math.min(8,2+lv);TD=[genTraps(0,n),genTraps(1,n)];kst=[[],[]];items=[];items.push(genItem('light'));items.push(genItem('life',items[0]));got=0;tt=0;gt=0;evMin=1;lives=3;inv=0;hurtV=0;shake=0;bigLight=false;torch.distance=16;scene.fog.density=.13;lit=false;litV=0;applyLit(0);quizOn=false;$('quiz').style.display='none';killBlk();killSil();silP=2;stam=1;tired=false;runT=false;$('run').classList.remove('on');stun=0;alarm=0;gfreeze=0;stairLock=false;woke=false;gGone=false;mapGot=false;lampsOut=false;cut=null;fadeV=0;$('fade').style.opacity=0;gh.visible=false;$('mini').style.display='none';$('note').style.display='none';
+function newLevel(lv){level=lv;rnd=RM?mulb(RM.seed*131+lv):Math.random;wake=Math.max(3,8-(lv-1));const n=Math.min(8,2+lv);F[1]=lv===2?F2P:F1O;TD=[genTraps(0,n),genTraps(1,n)];kst=[[],[]];items=[];items.push(genItem('light'));items.push(genItem('life',items[0]));pzInit(lv);got=0;tt=0;gt=0;evMin=1;lives=3;inv=0;hurtV=0;shake=0;bigLight=false;torch.distance=16;scene.fog.density=.13;lit=false;litV=0;applyLit(0);quizOn=false;$('quiz').style.display='none';killBlk();killSil();silP=2;stam=1;tired=false;runT=false;$('run').classList.remove('on');stun=0;alarm=0;gfreeze=0;stairLock=false;woke=false;gGone=false;mapGot=false;lampsOut=false;cut=null;fadeV=0;$('fade').style.opacity=0;gh.visible=false;$('mini').style.display='none';$('note').style.display='none';
 build(0);px=start[0];pz=start[1];yaw=Math.PI;pitch=0;gx=5*S+S/2;gz=11*S+S/2;gh.position.set(gx,0,gz);dm.color.set(0xaa1111);hud();$('msg').textContent=''}
 const bgm=new Audio('https://www.dropbox.com/scl/fi/iycf4xe4bm8w6n7rbj4ut/locked_in_the_west_wing.mp3?rlkey=sd5aut6o1ssscfsvv4qjnj7e4&st=rma2kygs&raw=1');bgm.loop=true;bgm.volume=.45;bgm.preload='auto';
 const bgm2=new Audio('https://www.dropbox.com/scl/fi/3o5dishzrxdzhadjyd4u6/langkah_yang_mengikuti.mp3?rlkey=ks90aat1xjncnr3jqb2gsdtv9&st=zzmvwrbu&raw=1');bgm2.loop=true;bgm2.volume=.45;bgm2.preload='auto';
@@ -177,7 +181,7 @@ function stopBgm(){bgm.pause();bgm2.pause()}
 function playBgm(){const on=mapGot?bgm2:bgm,off=mapGot?bgm:bgm2;off.pause();on.volume=.45;on.play().catch(()=>{})}
 function fadeBgm(a,b){b.currentTime=0;b.volume=0;b.play().catch(()=>{});let v=0;const iv=setInterval(()=>{v=Math.min(1,v+.05);b.volume=.45*v;a.volume=.45*(1-v);if(v>=1){clearInterval(iv);a.pause();a.volume=.45}},60)}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopBgm();else if(playing&&!vidOn)playBgm()});
-function show(h,p,b){stopBgm();$('run').style.display='none';$('note').style.display='none';document.querySelector('#ov h1').textContent=h;$('ovt').textContent=p;$('go').textContent=b;$('ov').style.display='flex';playing=false}
+function show(h,p,b){stopBgm();$('pzr').style.display='none';$('run').style.display='none';$('note').style.display='none';document.querySelector('#ov h1').textContent=h;$('ovt').textContent=p;$('go').textContent=b;$('ov').style.display='flex';playing=false}
 const INTRO_URL='https://www.dropbox.com/scl/fi/v09qh62m9xjy358c0o4bf/gemini_generated_video_7b95c877.mp4?rlkey=u7td2ny0ohgexzbwz2l4k50cd&raw=1';let introDone=false;
 const MAP_URL='https://www.dropbox.com/scl/fi/rluwculo7b096fv1ihxzk/gemini_generated_video_d04f5687.mp4?rlkey=pe84weu1kx1sip77gcp2phui1&raw=1';let vidOn=false;
 function playVideo(url,cb,start){const box=$('intro'),v=$('introv');let fin=false;vidOn=true;
@@ -189,7 +193,51 @@ function startGame(){rst='play';newLevel(pending);$('ov').style.display='none';p
 $('go').onclick=()=>{if(goAct){const f=goAct;goAct=null;f();return}if(introDone)startGame();else{introDone=true;playIntro(startGame)}};
 function hurt(w){if(inv>0)return false;lives--;inv=2.2;hurtV=.9;hud();beep(130,.5,'sawtooth',.3);say(w+' Nyawa: '+Math.max(lives,0));return true}
 function gameOver(p){beep(90,1,'sawtooth',.3);pending=level;rst='dead';show('NYAWA HABIS',p,'Ulangi level')}
-const hitB=(x,z)=>hit(x,z)||(blk&&Math.hypot(x-blk.x,z-blk.z)<blk.r+.4);
+
+// ---------- Puzzle balok (level 2, lantai 2) ----------
+// Ubah/tambah soal di sini: q = pertanyaan di tembok, a = jawaban benar, w = 2 jawaban salah (semuanya angka)
+const PZQ=[{q:"Berapa hasil 7 × 8 ?",a:56,w:[54,63]},{q:"Berapa hasil 15 + 27 ?",a:42,w:[32,44]},{q:"Berapa hasil 100 − 37 ?",a:63,w:[67,73]},{q:"Berapa hasil 12 × 12 ?",a:144,w:[124,122]},{q:"Bilangan prima setelah 7 adalah …",a:11,w:[9,13]},{q:"Sebuah kubus memiliki berapa sisi?",a:6,w:[4,8]},{q:"Jumlah sudut dalam segitiga (derajat) = …",a:180,w:[90,360]},{q:"Berapa hasil 9 × 9 ?",a:81,w:[72,99]},{q:"Akar kuadrat dari 169 adalah …",a:13,w:[14,12]},{q:"Berapa hasil 144 ÷ 12 ?",a:12,w:[14,11]},{q:"Keliling persegi dengan sisi 7 adalah …",a:28,w:[49,14]},{q:"Luas persegi panjang 8 × 6 adalah …",a:48,w:[14,56]},{q:"Hasil dari 3² + 4² adalah …",a:25,w:[49,7]}];
+const PC0=3,PC1=7,PR0=1,PR1=5,PSP=[[4,2],[5,2],[6,2],[4,4],[5,4],[6,4],[5,3],[4,3],[6,3]];
+let PZ=null;
+const pcx=c=>c*S+S/2;
+function pzInit(lv){PZ=null;if(lv!==2)return;
+TD[1]=TD[1].filter(t=>!(t.x/S>=PC0&&t.x/S<PC1+1&&t.z/S>=PR0&&t.z/S<PR1+1));
+const q=PZQ[Math.floor(rnd()*PZQ.length)],nums=shuf([q.a,...q.w]);
+PZ={q,pad:[7,3],solved:false,kidx:9,pb:null,pa:0,ps:0,pt:0,padM:null,blocks:nums.map((n,i)=>({n,ok:n===q.a,sx:4+i,sz:2,cx:4+i,cz:2,m:null,anim:null,gone:false}))}}
+function numTex(n){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='#6b4423';x.fillRect(0,0,256,256);x.fillStyle='#d2a86a';x.fillRect(14,14,228,228);x.strokeStyle='#2a1a0a';x.lineWidth=8;x.strokeRect(14,14,228,228);
+const t=String(n);x.fillStyle='#2a1a0a';x.font='bold '+(t.length>=3?104:t.length===2?138:170)+'px Georgia';x.textAlign='center';x.textBaseline='middle';x.fillText(t,128,136);return new THREE.CanvasTexture(c)}
+function wrapT(x,t,w){const o=[];let l='';for(const wd of t.split(' ')){const u=l?l+' '+wd:wd;if(x.measureText(u).width>w&&l){o.push(l);l=wd}else l=u}o.push(l);return o}
+function pzBuild(){const c=document.createElement('canvas');c.width=1024;c.height=360;const x=c.getContext('2d');
+x.fillStyle='#d9c9a0';x.fillRect(0,0,1024,360);x.strokeStyle='#5a4426';x.lineWidth=10;x.strokeRect(10,10,1004,340);x.textAlign='center';
+x.fillStyle='#8a1212';x.font='bold 32px Georgia';x.fillText('PUZZLE BALOK',512,62);
+x.fillStyle='#2a1c0c';x.font='bold 54px Georgia';const L=wrapT(x,PZ.q.q,900).slice(0,3);L.forEach((t,i)=>x.fillText(t,512,150+i*64-(L.length-1)*20));
+x.fillStyle='#5a3a10';x.font='bold 26px Georgia';x.fillText('Dorong balok jawaban ke lingkaran hijau (kanan)',512,330);
+const po=new THREE.Mesh(new THREE.PlaneGeometry(7.6,2.67),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),fog:false}));po.position.set(25,1.65,S+.03);world.add(po);
+const pd=new THREE.Mesh(new THREE.CircleGeometry(1.3,28),new THREE.MeshBasicMaterial({color:PZ.solved?0x66ff99:0x22cc55,transparent:true,opacity:.55,fog:false,depthWrite:false}));pd.rotation.x=-Math.PI/2;pd.position.set(pcx(PZ.pad[0]),.05,pcx(PZ.pad[1]));world.add(pd);PZ.padM=pd;
+PZ.blocks.forEach(b=>{b.m=null;if(b.gone)return;const t=numTex(b.n);b.m=new THREE.Mesh(new THREE.BoxGeometry(2.7,2.2,2.7),new THREE.MeshStandardMaterial({map:t,emissive:new THREE.Color(0x666666),emissiveMap:t,roughness:1}));b.m.position.set(pcx(b.cx),1.1,pcx(b.cz));world.add(b.m)});
+if(PZ.solved&&!kst[1][PZ.kidx])pzKey()}
+function pzKey(){const x=pcx(PZ.pad[0]),z=pcx(PZ.pad[1]),m=new THREE.Mesh(kg,km);m.position.set(x,1.2,z);world.add(m);keys.push({m,x,z,idx:PZ.kidx})}
+function pzHit(x,z){if(!PZ||fi!==1)return false;for(const b of PZ.blocks){if(b.gone||!b.m)continue;if(Math.abs(x-b.m.position.x)<1.35&&Math.abs(z-b.m.position.z)<1.35)return true}return false}
+function pzSpawn(b){for(const [c,r] of [[b.sx,b.sz],...PSP]){if(PZ.blocks.some(o=>o!==b&&!o.gone&&o.cx===c&&o.cz===r))continue;if(Math.hypot(pcx(c)-px,pcx(r)-pz)<2.8)continue;b.cx=c;b.cz=r;b.anim=null;if(b.m)b.m.position.set(pcx(c),1.1,pcx(r));return}}
+function pzReset(){if(!PZ||PZ.solved)return;PZ.blocks.forEach(b=>{if(!b.gone){b.cx=b.cz=-9;b.anim=null}});PZ.blocks.forEach(b=>{if(!b.gone)pzSpawn(b)});beep(260,.15,'square',.12);say('Balok dikembalikan ke posisi awal.')}
+$('pzr').onclick=pzReset;
+function pzMove(b,ax,sg){const c=b.cx+(ax===0?sg:0),r=b.cz+(ax===1?sg:0);
+if(c<PC0||c>PC1||r<PR0||r>PR1||PZ.blocks.some(o=>o!==b&&!o.gone&&o.cx===c&&o.cz===r)||Math.hypot(pcx(c)-px,pcx(r)-pz)<2.2){beep(70,.08,'square',.1);return}
+b.anim={t:0,d:.32,fx:b.m.position.x,fz:b.m.position.z,tx:pcx(c),tz:pcx(r)};b.cx=c;b.cz=r;beep(90,.15,'square',.12)}
+function pzAnim(dt){if(!PZ||fi!==1)return;if(PZ.padM)PZ.padM.material.opacity=PZ.solved?.8:.45+.2*Math.sin(tt*4);
+PZ.blocks.forEach(b=>{const a=b.anim;if(!a||!b.m)return;a.t+=dt;const k=Math.min(1,a.t/a.d);b.m.position.x=a.fx+(a.tx-a.fx)*k;b.m.position.z=a.fz+(a.tz-a.fz)*k;if(k>=1){b.anim=null;pzLand(b)}})}
+function pzLand(b){if(b.cx!==PZ.pad[0]||b.cz!==PZ.pad[1])return;
+if(b.ok){b.gone=true;world.remove(b.m);b.m=null;PZ.solved=true;if(PZ.padM)PZ.padM.material.color.set(0x66ff99);pzKey();hud();beep(660,.2);beep(990,.3);beep(1320,.5);say('Puzzle benar! Kunci keenam muncul di lingkaran hijau.',5)}
+else{beep(110,.6,'sawtooth',.25);say('Salah! Balok kembali ke tempat semula.');pzSpawn(b)}}
+function pzPush(dt,dx,dz){const bt=$('pzr');
+if(!PZ||fi!==1){bt.style.display='none';return}
+bt.style.display=!PZ.solved&&Math.hypot(px-pcx(5),pz-pcx(3))<16?'block':'none';
+let ct=null;const mv=Math.hypot(dx,dz);
+if(mv>1e-4&&!quizOn)for(const b of PZ.blocks){if(b.gone||b.anim||!b.m)continue;const rx=b.m.position.x-px,rz=b.m.position.z-pz,ax=Math.abs(rx),az=Math.abs(rz);
+if(ax>=az){if(az>1.5||ax>2.2||dx*Math.sign(rx)<mv*.5)continue;ct={b,a:0,s:Math.sign(rx)}}else{if(ax>1.5||az>2.2||dz*Math.sign(rz)<mv*.5)continue;ct={b,a:1,s:Math.sign(rz)}}break}
+if(ct&&PZ.pb===ct.b&&PZ.pa===ct.a&&PZ.ps===ct.s)PZ.pt+=dt;else{PZ.pb=ct&&ct.b;PZ.pa=ct?ct.a:0;PZ.ps=ct?ct.s:0;PZ.pt=0}
+if(ct&&PZ.pt>.2){PZ.pt=0;pzMove(ct.b,ct.a,ct.s)}}
+const hitB=(x,z)=>hit(x,z)||pzHit(x,z)||(blk&&Math.hypot(x-blk.x,z-blk.z)<blk.r+.4);
 function nextPrime(n){for(;;){n++;let p=n>1;for(let i=2;i*i<=n;i++)if(n%i===0){p=false;break}if(p)return n}}
 const blkMat=new THREE.MeshStandardMaterial({map:tex('#2e2118','#5a4030',2),roughness:1});
 function killBlk(){if(blk){scene.remove(blk.m);blk=null}}
@@ -316,7 +364,7 @@ if(lit){litV=Math.min(1,litV+dt*.6);applyLit(litV)}
 if(cut){cutUpdate(dt);$('fade').style.opacity=fadeV;return}if(fadeV>0){fadeV=Math.max(0,fadeV-dt*2);$('fade').style.opacity=fadeV}
 if(flashV>0){flashV=Math.max(0,flashV-dt*3);if(flashV<.35&&fl2){fl2=false;flashV=.7}$('flash').style.opacity=flashV}
 if(!cut){thT-=dt;if(thT<=0){thunder();thT=25+Math.random()*30}}
-tt+=dt;gt+=dt;if(inv>0)inv-=dt;if(hurtV>0)hurtV=Math.max(0,hurtV-dt*1.2);if(shake>0)shake-=dt*1.2;updBlk(dt);updSil(dt);if(stun>0)stun-=dt;if(alarm>0)alarm-=dt;if(gfreeze>0)gfreeze-=dt;
+tt+=dt;gt+=dt;if(inv>0)inv-=dt;if(hurtV>0)hurtV=Math.max(0,hurtV-dt*1.2);if(shake>0)shake-=dt*1.2;updBlk(dt);updSil(dt);pzAnim(dt);if(stun>0)stun-=dt;if(alarm>0)alarm-=dt;if(gfreeze>0)gfreeze-=dt;
 let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0)-sy,s=(K.KeyD?1:0)-(K.KeyA?1:0)+sx;
 yaw+=((K.ArrowLeft?1:0)-(K.ArrowRight?1:0))*1.8*dt;
 if(stun>0){f=s=0}
@@ -325,7 +373,7 @@ const rn=(K.ShiftLeft||K.ShiftRight||runT)&&l>.15&&stun<=0&&!tired&&stam>0;
 if(rn){stam-=dt/4;if(stam<=0){stam=0;tired=true;say('Kehabisan tenaga!')}}else{stam=Math.min(1,stam+dt/6);if(tired&&stam>.35)tired=false}
 $('run').style.setProperty('--st',Math.round(stam*100)+'%');
 const sp=(rn?6.4:4)*dt,dx=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*sp,dz=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*sp;
-if(!hitB(px+dx,pz))px+=dx;if(!hitB(px,pz+dz))pz+=dz;
+if(!hitB(px+dx,pz))px+=dx;if(!hitB(px,pz+dz))pz+=dz;pzPush(dt,dx,dz);
 cam.position.set(px+(stun>0?(Math.random()-.5)*.1:0)+(shake>0?(Math.random()-.5)*shake*.3:0),1.6+Math.sin(tt*(rn?13:9))*.05*Math.min(l,1),pz);
 if(l>.15&&stun<=0){stepT-=dt;if(stepT<=0){step();stepT=(rn?.24:.36)/Math.max(.5,Math.min(l,1))}}else stepT=0;cam.rotation.set(pitch,yaw,0);
 for(const k of keys){if(!k.m)continue;k.m.rotation.y=tt*2;k.m.position.y=1.2+Math.sin(tt*3+k.x)*.12;
@@ -391,7 +439,7 @@ document.querySelectorAll('.qb').forEach(b=>b.onclick=()=>applyQuality(+b.datase
 if(q===null||!QS[+q]){const weak=(navigator.deviceMemory&&navigator.deviceMemory<=3)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4),touch=matchMedia('(pointer:coarse)').matches;q=weak?0:touch?1:2}
 applyQuality(+q)})();
 newLevel(1);let last=performance.now();
-(function loop(now){requestAnimationFrame(loop);if(now-last<Q.minDt)return;if(pool.length&&now-poolT>250){poolT=now;updPool()}const dt=Math.min((now-last)/1000,.05);last=now;if(playing)update(dt);else{cam.position.set(px,1.6,pz);cam.rotation.set(0,yaw+Math.sin(now/3000)*.3,0)}ren.render(scene,cam)})(last);
+(function loop(now){requestAnimationFrame(loop);if(now-last<Q.minDt)return;if(pool.length&&now-poolT>250){poolT=now;updPool()}const dt=Math.min((now-last)/1000,.05);last=now;if(playing)update(dt);else if(specTick)specTick(dt);else{cam.position.set(px,1.6,pz);cam.rotation.set(0,yaw+Math.sin(now/3000)*.3,0)}ren.render(scene,cam)})(last);
 </script>
 <script>
 // ===== MODE ROOM (Firebase Realtime Database) =====
@@ -441,7 +489,7 @@ mErr('');openLobby(d)}catch(e){RP=null;mErr(e.message)}finally{busy(false)}};
 
 // ---------- Peserta ----------
 function pNode(st){const run=st==='play'||st==='dead'||st==='clear';best=Math.max(best,run?(level-1)*NKT+got:0);
-return{name:RP.name,lv:run?cl(level,1,999):1,got:run?cl(got,0,NKT):0,lives:run?cl(lives,0,5):3,fl:run?fi:0,pr:best,st,x:run?+cl(px/S,0,13).toFixed(1):0,z:run?+cl(pz/S,0,13).toFixed(1):0,t:TS()}}
+return{name:RP.name,lv:run?cl(level,1,999):1,got:run?cl(got,0,NKT):0,lives:run?cl(lives,0,5):3,fl:run?fi:0,pr:best,st,x:run?+cl(px/S,0,13).toFixed(1):0,z:run?+cl(pz/S,0,13).toFixed(1):0,ya:run?+Math.atan2(Math.sin(yaw),Math.cos(yaw)).toFixed(2):0,t:TS()}}
 function lis(p,ev,cb){RP.ls.push([p,ev,cb]);RP.ref.child(p).on(ev,cb)}
 function unlis(p){if(!RP)return;RP.ls=RP.ls.filter(([q,ev,cb])=>{if(p&&q!==p)return true;RP.ref.child(q).off(ev,cb);return false})}
 function renderLobby(){const b=$('lList');b.textContent='';Object.values(RP.L).forEach(n=>b.append(el('span','',n)))}
@@ -456,7 +504,7 @@ lis('status','value',s=>{const v=s.val();if(v==='playing')beginRoom();else if(v=
 function syncNow(){if(RP&&RP.started&&!RP.ended)RP.pr.set(pNode(rst)).catch(()=>{})}
 function beginRoom(){if(!RP||RP.started||RP.ended)return;RP.started=true;unlis('players');
 $('lobby').style.display='none';RM={code:RP.code,seed:RP.seed};pending=1;introDone=true;startGame();
-syncNow();clearInterval(syncIv);syncIv=setInterval(syncNow,1500)}
+syncNow();clearInterval(syncIv);syncIv=setInterval(syncNow,800)}
 function closeAnim(){if(vidOn){try{$('introskip').onclick()}catch(e){}}quizOn=false;quizCb=null;$('quiz').style.display='none';cut=null;fadeV=0;$('fade').style.opacity=0}
 function endRoom(){if(!RP||RP.ended)return;const R0=RP;R0.ended=true;clearInterval(syncIv);
 if(R0.started)R0.pr.set(pNode(rst)).catch(()=>{});
@@ -477,7 +525,7 @@ $('lExit').onclick=()=>leaveRoom('',true);
 // ---------- Pengawas ----------
 function openHost(code,n){HP={code,ref:db.ref(RT+'/'+code),data:null,tm:0};
 $('menu').style.display='none';$('host').style.display='flex';$('hCode').textContent=code;$('hName').textContent='Pengawas: '+n;
-HP.ref.on('value',s=>{if(!HP)return;HP.data=s.val();if(!HP.tm)HP.tm=setTimeout(()=>{if(HP){HP.tm=0;renderHost()}},300)});
+HP.ref.on('value',s=>{if(!HP)return;HP.data=s.val();if(SP)specUpd();if(!HP.tm)HP.tm=setTimeout(()=>{if(HP){HP.tm=0;renderHost()}},300)});
 HP.iv=setInterval(renderHost,5000)}
 function renderHost(){if(!HP||!HP.data)return;const d=HP.data,ks=d.kicked||{},ps=d.players||{};
 const L=Object.keys(ps).filter(k=>!ks[k]).map(k=>Object.assign({id:k},ps[k]));
@@ -489,14 +537,37 @@ const box=$('hList');box.textContent='';
 L.forEach((p,i)=>{L[i].s=p.st==='off'||(d.status==='playing'&&p.st!=='wait'&&now-(p.t||0)>12000)?'off':p.st;
 const r=el('div','pr');r.append(el('span','rk',(i+1)+'.'),el('b','pn',p.name),el('span','sb s-'+L[i].s,STN[L[i].s]||L[i].s));
 const kb=el('button','kk','✖');kb.title='Keluarkan';kb.onclick=()=>{if(confirm('Keluarkan '+p.name+' dari room?'))HP.ref.child('kicked/'+p.id).set(true)};r.append(kb);
+if(d.status==='playing'&&(p.st==='play'||p.st==='dead'||p.st==='clear')){const wb=el('button','kk','👁 Pantau');wb.style.background='#1d6b34';wb.onclick=()=>specStart(p.id);r.append(wb)}
 r.append(el('span','pi','Level '+p.lv+' · Kunci '+p.got+'/'+NKT+' · '+'❤️'.repeat(p.lives)+'🖤'.repeat(Math.max(0,3-p.lives))+' · Lantai '+(p.fl+1)+' · Total '+p.pr));box.append(r)});
 if(!L.length)box.append(el('p','mut','Belum ada peserta. Bagikan kode room.'));
 [0,1].forEach(i=>{const x=$('hm'+i).getContext('2d'),z=12;x.clearRect(0,0,156,156);
 for(let r=0;r<R;r++)for(let c=0;c<W;c++){x.fillStyle=F[i][r][c]==='#'?'#222':'#555';x.fillRect(c*z,r*z,z,z)}
 L.forEach(p=>{if(p.s==='wait'||p.s==='off'||p.fl!==i)return;x.fillStyle='hsl('+(hash(p.id)%360)+',85%,60%)';x.beginPath();x.arc(p.x*z,p.z*z,4.5,0,7);x.fill();x.fillStyle='#fff';x.font='9px sans-serif';x.fillText(String(p.name||'?')[0].toUpperCase(),p.x*z+5,p.z*z-4)})})}
+
+// ---------- Pantau pemain (pengawas) ----------
+let SP=null;
+function specIds(){const d=HP&&HP.data;if(!d)return[];const ks=d.kicked||{},ps=d.players||{};return Object.keys(ps).filter(k=>!ks[k]&&['play','dead','clear'].includes(ps[k].st)).sort((a,b)=>String(ps[a].name).localeCompare(String(ps[b].name)))}
+function specStart(id){if(!HP)return;SP={id,lv:0,fl:-1,init:false,tx:0,tz:0,ty:0};$('host').style.display='none';$('spec').style.display='flex';$('hud').style.display='none';$('mini').style.display='none';specTick=specStep;specUpd()}
+function specStop(){SP=null;specTick=null;RM=null;$('spec').style.display='none';$('hud').style.display='';if(HP){$('host').style.display='flex';renderHost()}}
+function specNav(n){const L=specIds();if(!L.length)return;let i=L.indexOf(SP.id);i=(i+n+L.length)%L.length;SP.id=L[i];SP.init=false;specUpd()}
+function specUpd(){if(!SP||!HP||!HP.data)return;const d=HP.data;if(d.status==='ended')return specStop();
+const p=(d.players||{})[SP.id];if(!p||(d.kicked&&d.kicked[SP.id])){$('spN').textContent='(pemain keluar)';$('spInfo').textContent='Tekan ◀ ▶ untuk pemain lain';return}
+const off=p.st==='off'||(Date.now()+offs-(p.t||0)>12000);
+$('spN').textContent=p.name;$('spInfo').textContent='Lv '+p.lv+' · Kunci '+p.got+'/'+NKT+' · '+'❤️'.repeat(p.lives)+' · Lantai '+(p.fl+1)+' · '+(off?'Offline':STN[p.st]||p.st);
+if(p.st==='wait')return;
+if(!RM||RM.seed!==d.seed)RM={code:HP.code,seed:d.seed};
+const lv=p.lv||1,fl=p.fl?1:0;
+if(SP.lv!==lv){newLevel(lv);SP.lv=lv;SP.fl=0;SP.init=false}
+if(SP.fl!==fl){build(fl);SP.fl=fl;SP.init=false}
+SP.tx=(p.x||0)*S;SP.tz=(p.z||0)*S;SP.ty=p.ya||0}
+function specStep(dt){if(!SP)return;const k=1-Math.exp(-dt*5);
+if(!SP.init){px=SP.tx;pz=SP.tz;yaw=SP.ty;SP.init=true}
+else{px+=(SP.tx-px)*k;pz+=(SP.tz-pz)*k;let a=SP.ty-yaw;a=Math.atan2(Math.sin(a),Math.cos(a));yaw+=a*k}
+cam.position.set(px,1.6,pz);cam.rotation.set(0,yaw,0)}
+$('spPrev').onclick=()=>specNav(-1);$('spNext').onclick=()=>specNav(1);$('spBack').onclick=specStop;
 $('hStart').onclick=()=>{if(HP)HP.ref.update({status:'playing',startedAt:TS()})};
 $('hEnd').onclick=()=>{if(HP&&confirm('Akhiri permainan untuk semua peserta?'))HP.ref.update({status:'ended'})};
 $('hClose').onclick=()=>{if(!HP||!confirm('Tutup room dan keluar? Semua peserta ikut keluar dan data room dihapus.'))return;
-const h=HP;HP=null;clearInterval(h.iv);clearTimeout(h.tm);h.ref.off();h.ref.remove().catch(()=>{});$('host').style.display='none';$('menu').style.display='flex'};
+const h=HP;HP=null;SP=null;specTick=null;$('spec').style.display='none';$('hud').style.display='';clearInterval(h.iv);clearTimeout(h.tm);h.ref.off();h.ref.remove().catch(()=>{});$('host').style.display='none';$('menu').style.display='flex'};
 </script>
 </body></html>

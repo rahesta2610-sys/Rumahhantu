@@ -200,9 +200,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopBgm();e
 function show(h,p,b){stopBgm();$('pzr').style.display='none';$('run').style.display='none';$('note').style.display='none';document.querySelector('#ov h1').textContent=h;$('ovt').textContent=p;$('go').textContent=b;$('ov').style.display='flex';playing=false}
 const INTRO_URL='https://www.dropbox.com/scl/fi/v09qh62m9xjy358c0o4bf/gemini_generated_video_7b95c877.mp4?rlkey=u7td2ny0ohgexzbwz2l4k50cd&raw=1';let introDone=false;
 const MAP_URL='https://www.dropbox.com/scl/fi/rluwculo7b096fv1ihxzk/gemini_generated_video_d04f5687.mp4?rlkey=pe84weu1kx1sip77gcp2phui1&raw=1';let vidOn=false;
-function playVideo(url,cb,start){const box=$('intro'),v=$('introv');let fin=false;vidOn=true;
+function playVideo(url,cb,start,noSkip){const box=$('intro'),v=$('introv');let fin=false;vidOn=true;
 const end=()=>{if(fin)return;fin=true;v.pause();v.removeAttribute('src');v.load();box.style.display='none';vidOn=false;cb()};
-$('ov').style.display='none';box.style.display='flex';v.muted=false;v.onloadedmetadata=start?()=>{try{v.currentTime=start}catch(e){}}:null;v.src=url;v.onended=end;v.onerror=end;$('introskip').onclick=end;
+$('ov').style.display='none';box.style.display='flex';v.muted=false;v.onloadedmetadata=start?()=>{try{v.currentTime=start}catch(e){}}:null;v.src=url;v.onended=end;v.onerror=end;$('introskip').onclick=end;$('introskip').style.display=noSkip?'none':'';
 const pr=v.play();if(pr&&pr.catch)pr.catch(()=>{v.muted=true;v.play().catch(end)})}
 function playIntro(cb){playVideo(INTRO_URL,cb)}
 function startGame(){rst='play';newLevel(pending);$('ov').style.display='none';playing=true;$('run').style.display='block';playBgm();beep(120,.4);$('vig').style.opacity=0}
@@ -369,7 +369,7 @@ playVideo(last?WIN_URL:KEY_URL,()=>{if(!bgm2On()){altBgm=true;fadeBgm(bgm,bgm2)}
 if(last){gGone=true;woke=false;gh.visible=false;alarm=0;gfreeze=0;lit=true;lampsOut=false;lamps.forEach(l=>setLamp(l,true));m='SEMUA KUNCI TERKUMPUL! Labirin menjadi terang & hantu menghilang. Lari ke PINTU HIJAU di lantai 1!'}
 else if(!woke){woke=true;gh.visible=true;placeGhost();gfreeze=Math.max(2,5-level*.4);m='Kunci ditemukan… sesuatu terbangun di rumah ini!';beep(90,.8,'sawtooth',.25)}
 else{alarm=4;gfreeze=0;m='Kunci ditemukan! Hantu mengamuk dan berlari ke arahmu!';beep(90,.8,'sawtooth',.25)}
-say(m,last?6:3);hud()},last?7:0)}
+say(m,last?6:3);hud()},last?7:0,last)}
 function pickItem(it){world.remove(it.m);it.m=null;it.state='quiz';beep(520,.2);
 if(it.type==='light')openQuiz('🔦 Senter Besar!','Jawab dengan benar untuk mendapatkan senter. Jawaban salah = senter rusak dan hilang.',ok=>{
 if(ok){it.state='got';bigLight=true;torch.distance=34;scene.fog.density=.075;hud();beep(660,.2);beep(880,.3);beep(1320,.5);say('Benar! Senter besar menerangi jalanmu.')}

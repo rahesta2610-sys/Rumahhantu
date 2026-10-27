@@ -85,7 +85,7 @@ input{user-select:text;-webkit-user-select:text;font:inherit;font-size:18px;padd
 1️⃣ Cari PETA — ikuti kertas petunjuk di dinding.
 2️⃣ Kumpulkan 6 kunci emas di 2 lantai (pindah lantai lewat TANGGA BIRU).
 3️⃣ Setelah semua kunci terkumpul, LARI ke PINTU HIJAU di lantai 1.
-⚠ Hindari jebakan merah &amp; ungu. Hantu terbangun saat kamu menemukan peta atau kunci pertama, dan menghilang (labirin menjadi terang) setelah semua kunci terkumpul. Hantu cepat & licik: ia bisa muncul mendadak lebih dekat, dan makin ganas kalau kamu berlari di dekatnya. Kelelawar bermata merah menggantung di atap: ia akan menyambar & melintasimu, tapi tidak mengurangi nyawa. Item ❤️ kini lebih banyak.</p>
+⚠ Hindari jebakan merah &amp; ungu. Hantu terbangun saat kamu menemukan peta atau kunci pertama, dan menghilang (labirin menjadi terang) setelah semua kunci terkumpul. Hantu cepat & licik: ia bisa muncul mendadak lebih dekat, dan makin ganas kalau kamu berlari di dekatnya. Kelelawar bermata merah menggantung di atap: ia akan menyambar & melintasimu, tapi tidak mengurangi nyawa. Item ❤️ kini lebih banyak. Jawab semua soal dengan benar dalam satu level = 1.000.000 poin.</p>
 <p>HP: joystick di kiri layar, geser kanan untuk melihat.<br>PC: WASD + seret mouse (atau panah).<br>Lari: tombol LARI (HP) / Shift (PC), tenaga terbatas.<br>Kamu punya 3 ❤️. Jebakan paku &amp; hantu mengurangi 1 nyawa. Ambil kunci, senter besar &amp; item ❤️ dengan menjawab soal. Salah saat ambil kunci boleh dicoba lagi.</p>
 <div id="qsel" style="display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap"><span style="font-size:14px;color:#bdb5a5">Grafik:</span><button class="qb" data-q="0">Rendah</button><button class="qb" data-q="1">Sedang</button><button class="qb" data-q="2">Tinggi</button></div>
 <p id="qhint" style="font-size:12px;color:#8d8678;max-width:340px;margin:0"></p>
@@ -229,14 +229,14 @@ let ac;function beep(f,d,t='sine',v=.15){try{ac=ac||new AudioContext();const o=a
 let nCorrect=0,sentPts=0;
 let silP=2,sil=null,gt=0,evMin=1,lives=3,inv=0,hurtV=0,shake=0,bigLight=false,quizOn=false,blk=null,items=[],quizCb=null,lastQ=-1,stam=1,tired=false,runT=false;
 let px,pz,yaw,pitch,gx,gz,got,playing=false,sx=0,sy=0,tt=0,hb=0,gdist=[],gsrc=0,msgT=0,wake,woke,stun,alarm,gfreeze,stairLock;const K={};
-function hud(){$('kc').textContent='🗝 '+got+'/'+NKT+'  '+'❤️'.repeat(Math.max(lives,0))+'🖤'.repeat(Math.max(0,3-lives))+'\nLevel '+level+' · Lantai '+(fi+1)+'\n🧭 Labirin '+MZ[mzI].n+'\n'+(mapGot?'🗺 Peta ✓':'🗺 Cari peta')+(bigLight?'\n🔦 Senter besar ✓':'')+'\n⭐ Poin: '+nCorrect*100+(RM?'\n🏠 Room '+RM.code:'');goalTxt()}
+function hud(){$('kc').textContent='🗝 '+got+'/'+NKT+'  '+'❤️'.repeat(Math.max(lives,0))+'🖤'.repeat(Math.max(0,3-lives))+'\nLevel '+level+' · Lantai '+(fi+1)+'\n🧭 Labirin '+MZ[mzI].n+'\n'+(mapGot?'🗺 Peta ✓':'🗺 Cari peta')+(bigLight?'\n🔦 Senter besar ✓':'')+'\n⭐ Poin: '+fmtN(totalPts())+(RM?'\n🏠 Room '+RM.code:'');goalTxt()}
 function goalTxt(){const g=$('goal');let a,b,c=false;const here=keys.filter(k=>k.m).length;
 if(got>=NKT){c=true;a='🚪 LARI KE PINTU HIJAU!';b=fi===1?'Labirin kini terang & hantu menghilang. Turun lewat TANGGA BIRU ke lantai 1, lalu cari pintu hijau':'Pintu hijau ada di lantai 1. Labirin kini terang, hantu sudah menghilang!'}
 else{a='🗝 Kumpulkan kunci emas ('+got+'/'+NKT+')';b=here>0?'Masih ada '+here+' kunci di lantai ini (titik kuning di peta)':'Lantai ini sudah habis. Pindah lantai lewat TANGGA BIRU';if(!mapGot)b+='\n🗺 Cari peta: ikuti kertas petunjuk di dinding';if(PZ&&!PZ.solved)b+='\n🧩 Lantai 2: dorong balok jawaban ke lingkaran hijau'}
 g.className=c?'go':'';g.innerHTML='<b>'+a+'</b>'+b.split('\n').map(t=>'<span>'+t+'</span>').join('')}
 function say(s,t){$('msg').textContent=s;msgT=t||3}
 function applyLit(v){ambL.color.setRGB(.165+.685*v,.125+.695*v,.188+.712*v);ambL.intensity=Q.amb+1.4*v;scene.fog.density=(bigLight?.075:.13)*(1-.75*v);scene.background.setRGB(.012+.15*v,.012+.16*v,.02+.2*v);scene.fog.color.copy(scene.background)}
-function newLevel(lv){level=lv;rnd=RM?mulb(RM.seed*131+lv):Math.random;wake=Math.max(3,8-(lv-1));const n=Math.min(8,2+lv);mzSet(lv);TD=[genTraps(0,n),genTraps(1,n)];kst=[[],[]];items=[];items.push(genItem('light'));for(let k=0;k<5;k++)items.push(genItem('life',items.slice(),k%2));pzInit(lv);got=0;tt=0;gt=0;evMin=1;lives=3;inv=0;hurtV=0;shake=0;bigLight=false;torch.distance=16;scene.fog.density=.13;lit=false;litV=0;applyLit(0);quizOn=false;$('quiz').style.display='none';killBlk();killSil();silP=2;stam=1;tired=false;runT=false;$('run').classList.remove('on');stun=0;alarm=0;gfreeze=0;stairLock=false;woke=false;gbl=10;batMsg=false;gGone=false;mapGot=false;altBgm=false;lampsOut=false;cut=null;fadeV=0;$('fade').style.opacity=0;gh.visible=false;$('mini').style.display='none';$('note').style.display='none';
+function newLevel(lv){level=lv;rnd=RM?mulb(RM.seed*131+lv):Math.random;wake=Math.max(3,8-(lv-1));const n=Math.min(8,2+lv);mzSet(lv);TD=[genTraps(0,n),genTraps(1,n)];kst=[[],[]];items=[];items.push(genItem('light'));for(let k=0;k<5;k++)items.push(genItem('life',items.slice(),k%2));pzInit(lv);got=0;tt=0;gt=0;evMin=1;lives=3;inv=0;hurtV=0;shake=0;bigLight=false;torch.distance=16;scene.fog.density=.13;lit=false;litV=0;applyLit(0);quizOn=false;$('quiz').style.display='none';killBlk();killSil();silP=2;stam=1;tired=false;runT=false;$('run').classList.remove('on');stun=0;alarm=0;gfreeze=0;stairLock=false;woke=false;lvC=0;gbl=10;batMsg=false;gGone=false;mapGot=false;altBgm=false;lampsOut=false;cut=null;fadeV=0;$('fade').style.opacity=0;gh.visible=false;$('mini').style.display='none';$('note').style.display='none';
 build(0);px=start[0];pz=start[1];yaw=Math.PI;pitch=0;gx=5*S+S/2;gz=11*S+S/2;gh.position.set(gx,0,gz);dm.color.set(0xaa1111);hud();$('msg').textContent=''}
 const bgm=new Audio('https://www.dropbox.com/scl/fi/iycf4xe4bm8w6n7rbj4ut/locked_in_the_west_wing.mp3?rlkey=sd5aut6o1ssscfsvv4qjnj7e4&st=rma2kygs&raw=1');bgm.loop=true;bgm.volume=.45;bgm.preload='auto';
 const bgm2=new Audio('https://www.dropbox.com/scl/fi/3o5dishzrxdzhadjyd4u6/langkah_yang_mengikuti.mp3?rlkey=ks90aat1xjncnr3jqb2gsdtv9&st=zzmvwrbu&raw=1');bgm2.loop=true;bgm2.volume=.45;bgm2.preload='auto';
@@ -389,16 +389,20 @@ function answerQuiz(ok){if(ok)addCorrect();quizOn=false;$('quiz').style.display=
 // ---------- Skor & kirim ke sheet "hasil" ----------
 // Tiap jawaban benar = 100 poin. Total akhir dikali 2. Dikirim ke Apps Script (saveHasil).
 const GAS_URL='https://script.google.com/macros/s/AKfycbzXYYXeeLxZUGS1b96P2fdE4_8nNjt58n6om_w9JNVQXeTcXEqIkaEVsxiBGLqVb77X/exec';
-const PTS_PER=100,MULT=2;
-const totalPts=()=>nCorrect*PTS_PER*MULT;
-function addCorrect(){nCorrect++;hud()}
-function scoreTxt(){return '⭐ Benar: '+nCorrect+' soal × '+PTS_PER+' = '+nCorrect*PTS_PER+'  →  ×'+MULT+' = '+totalPts()+' poin (dikirim ke sheet hasil)'}
+const LVMAX=1000000;let lvC=0,lvAw={};
+// Skor sempurna per level = 1.000.000: tiap jawaban benar bernilai 1.000.000 ÷ jumlah soal maksimal di level itu
+// (6 kunci + 1 senter + 5 item nyawa = 12; Level 2 +1 soal puzzle balok = 13). Mengulang level tidak menambah poin di atas hasil terbaik level itu.
+const maxQ=()=>12+(PZ?1:0),lvPts=c=>Math.min(LVMAX,Math.round(LVMAX*c/maxQ()));
+const totalPts=()=>Object.values(lvAw).reduce((a,b)=>a+b,0);
+const fmtN=n=>Number(n).toLocaleString('id-ID');
+function addCorrect(){nCorrect++;lvC++;lvAw[level]=Math.max(lvAw[level]||0,lvPts(lvC));hud()}
+function scoreTxt(){return '⭐ Benar level ini: '+lvC+'/'+maxQ()+' soal → '+fmtN(lvPts(lvC))+' poin (maks '+fmtN(LVMAX)+')\nTotal: '+fmtN(totalPts())+' poin (dikirim ke sheet hasil)'}
 function flushScore(){const tot=totalPts(),d=tot-sentPts;if(d<=0)return;sentPts=tot;
 const n=(($('pname').value||'').trim()||'Anonim').slice(0,20),k=(($('pkelas').value||'').trim()||'-').slice(0,10);
 try{localStorage.setItem('rh_kelas',k==='-'?'':k)}catch(e){}
 fetch(GAS_URL+'?action=saveHasil&nama='+encodeURIComponent(n)+'&kelas='+encodeURIComponent(k)+'&point='+d,{keepalive:true})
 .then(r=>r.json()).then(j=>{if(!j||j.status!=='ok')throw 0}).catch(()=>{sentPts=Math.max(0,sentPts-d)})}
-function resetScore(){nCorrect=0;sentPts=0}
+function resetScore(){nCorrect=0;sentPts=0;lvC=0;lvAw={}}
 addEventListener('pagehide',flushScore);
 try{$('pkelas').value=localStorage.getItem('rh_kelas')||''}catch(e){}
 // Ambil soal dari Google Sheet (semua mata pelajaran) lalu gabungkan dengan soal bawaan (QZ)
